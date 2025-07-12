@@ -32,13 +32,11 @@ check_os() {
 
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
-  sudo apt update
   sudo apt -y install wget tar
 }
 
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
-  sudo dnf -y update
   sudo dnf -y install wget tar
   sudo firewall-cmd --permanent --add-port=9090/tcp
   sudo firewall-cmd --reload

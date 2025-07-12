@@ -36,7 +36,6 @@ check_os() {
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
   magentaprint "Устанавливаем необходимые пакеты..."
-  sudo apt update
   sudo apt -y install wget tar
 
   # Настраиваем firewall:
@@ -46,7 +45,6 @@ packages_firewall_ubuntu() {
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
   magentaprint "Устанавливаем необходимые пакеты..."
-  sudo dnf -y update
   sudo dnf -y install wget tar
 
   # Настраиваем firewall:

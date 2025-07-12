@@ -27,16 +27,12 @@ check_os() {
 
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
-  # Обновить список доступных пакетов.
-  sudo apt update
   # Установить wget и tar.
   sudo apt -y install wget tar
 }
 
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
-  # Обновить список доступных пакетов.
-  sudo dnf -y update
   # Установить wget и tar.
   sudo dnf -y install wget tar
   # Открыть порт 9090.
