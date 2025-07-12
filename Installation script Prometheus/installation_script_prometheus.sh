@@ -24,7 +24,7 @@ check_os() {
   elif [ "$OS" == "almalinux" ]; then
       packages_firewall_almalinux
   else
-      echo $(magentaprint "Скрипт не поддерживает установленную ОС: $OS")
+      magentaprint "Скрипт не поддерживает установленную ОС: $OS"
       # Выход из скрипта с кодом 1.
       exit 1
   fi
@@ -122,9 +122,9 @@ disable_selinux() {
   if [ -f /etc/selinux/config ]; then
     # Изменение строки SELINUX= на SELINUX=disabled
     sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
-    echo $(magentaprint "SELinux был отключен. Перезагрузите систему для применения изменений.")
+    magentaprint "SELinux был отключен. Перезагрузите систему для применения изменений."
   else
-    echo $(magentaprint "Файл конфигурации SELinux не найден.")
+    magentaprint "Файл конфигурации SELinux не найден."
   fi
 }
 
@@ -132,7 +132,7 @@ disable_selinux() {
 check_status_prometheus() {
   sudo systemctl status prometheus --no-pager
   prometheus --version
-  echo $(magentaprint "Prometheus успешно установлен и настроен на $OS.")
+  magentaprint "Prometheus успешно установлен и настроен на $OS."
 }
 
 # Создание функций main

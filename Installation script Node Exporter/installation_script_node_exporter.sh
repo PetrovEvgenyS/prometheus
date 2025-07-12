@@ -27,7 +27,7 @@ check_os() {
   elif [ "$OS" == "almalinux" ]; then
       packages_firewall_almalinux
   else
-      echo $(magentaprint "Скрипт не поддерживает установленную ОС: $OS")
+      magentaprint "Скрипт не поддерживает установленную ОС: $OS"
       # Выход из скрипта с кодом 1.
       exit 1
   fi
@@ -35,35 +35,35 @@ check_os() {
 
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
-  echo $(magentaprint "Устанавливаем необходимые пакеты...")
+  magentaprint "Устанавливаем необходимые пакеты..."
   sudo apt update
   sudo apt -y install wget tar
 
   # Настраиваем firewall:
-  echo $(magentaprint "Настраиваем firewall...")
+  magentaprint "Настраиваем firewall..."
 }
 
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
-  echo $(magentaprint "Устанавливаем необходимые пакеты...")
+  magentaprint "Устанавливаем необходимые пакеты..."
   sudo dnf -y update
   sudo dnf -y install wget tar
 
   # Настраиваем firewall:
-  echo $(magentaprint "Настраиваем firewall...")
+  magentaprint "Настраиваем firewall..."
   sudo firewall-cmd --permanent --add-port=9100/tcp
   sudo firewall-cmd --reload
 }
 
 # Функция подготовки почвы:
 preparation() {
-  echo $(magentaprint "Создание пользователя $USER для запуска $NAME_SERVICE_EXPORTER...")
+  magentaprint "Создание пользователя $USER для запуска $NAME_SERVICE_EXPORTER..."
   sudo useradd --no-create-home --shell /sbin/nologin $USER
 }
 
 # Функция для скачивания Exporter:
 download_exporter () {
-  echo $(magentaprint "Загрузка $NAME_SERVICE_EXPORTER...")
+  magentaprint "Загрузка $NAME_SERVICE_EXPORTER..."
   # Загрузка Exporter
   sudo wget $EXPORTER_URL -O /tmp/$NAME_SERVICE_EXPORTER.tar.gz
   # Распаковка архива
@@ -77,7 +77,7 @@ download_exporter () {
 
 # Функция создания юнита Exporter для systemd:
 create_unit_exporter() {
-  echo $(magentaprint "Настраиваем юнит $NAME_SERVICE_EXPORTER...")
+  magentaprint "Настраиваем юнит $NAME_SERVICE_EXPORTER..."
   sudo tee /etc/systemd/system/$NAME_SERVICE_EXPORTER.service > /dev/null <<EOF
 [Unit]
 Description=$NAME_SERVICE_EXPORTER $NODE_EXPORTER_VERSION
@@ -98,7 +98,7 @@ EOF
 
 # Перезагружаем systemd. Запуск и включение Exporter:
 start_enable_exporter() {
-  echo $(magentaprint "Перезагружаем systemd. Запуск и включение $NAME_SERVICE_EXPORTER...")
+  magentaprint "Перезагружаем systemd. Запуск и включение $NAME_SERVICE_EXPORTER..."
   sudo systemctl daemon-reload
   sudo systemctl start $NAME_SERVICE_EXPORTER
   sudo systemctl enable $NAME_SERVICE_EXPORTER
@@ -106,14 +106,14 @@ start_enable_exporter() {
 
 # Отключение SELinux:
 disable_selinux() {
-  echo $(magentaprint "Отключаем SELinux...")
+  magentaprint "Отключаем SELinux..."
   # Проверка, существует ли файл конфигурации SELinux
   if [ -f /etc/selinux/config ]; then
     # Изменение строки SELINUX= на SELINUX=disabled
     sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
-    echo $(magentaprint "SELinux был отключен. Перезагрузите систему для применения изменений.")
+    magentaprint "SELinux был отключен. Перезагрузите систему для применения изменений."
   else
-    echo $(magentaprint "Файл конфигурации SELinux не найден.")
+    magentaprint "Файл конфигурации SELinux не найден."
   fi
 }
 
@@ -121,12 +121,12 @@ disable_selinux() {
 check_status_exporter() {
   sudo systemctl status $NAME_SERVICE_EXPORTER --no-pager
   $NAME_SERVICE_EXPORTER --version
-  echo $(magentaprint "$NAME_SERVICE_EXPORTER успешно установлен и настроен на $OS.")
+  magentaprint "$NAME_SERVICE_EXPORTER успешно установлен и настроен на $OS."
 
   # Получение IPv4 и сохранение её в переменную:
   IPv4=$(ip -4 -o addr show eth0 | awk '{print $4}' | cut -d/ -f1)
 
-  echo $(magentaprint "Проверьте экспортируемые метрики по адресу http://$IPv4:9100/metrics")
+  magentaprint "Проверьте экспортируемые метрики по адресу http://$IPv4:9100/metrics"
 }
 
 
