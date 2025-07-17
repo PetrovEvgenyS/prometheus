@@ -17,6 +17,15 @@ CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
 magentaprint() { printf "${MAGENTA}%s${RESET}\n" "$1"; }
 
 
+# ------------------------------------------------------------------------------------ #
+
+
+# Проверка запуска через sudo
+if [ -z "$SUDO_USER" ]; then
+    errorprint "Пожалуйста, запустите скрипт через sudo."
+    exit 1
+fi
+
 # Выбор ОС для установки необходимых пакетов и настройки firewall..
 check_os() {
   if [ "$OS" == "ubuntu" ]; then
@@ -32,37 +41,37 @@ check_os() {
 
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
-  sudo apt -y install wget tar
+  apt -y install wget tar
 }
 
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
-  sudo dnf -y install wget tar
-  sudo firewall-cmd --permanent --add-port=9090/tcp
-  sudo firewall-cmd --reload
+  dnf -y install wget tar
+  firewall-cmd --permanent --add-port=9090/tcp
+  firewall-cmd --reload
 }
 
 # Функция подготовки почвы:
 preparation() {
-  sudo mkdir -p $PROMETHEUS_FOLDER_CONFIG $PROMETHEUS_FOLDER_TSDATA
-  sudo useradd --no-create-home --shell /bin/false prometheus
+  mkdir -p $PROMETHEUS_FOLDER_CONFIG $PROMETHEUS_FOLDER_TSDATA
+  useradd --no-create-home --shell /bin/false prometheus
 }
 
 # Функция для скачивания Prometheus:
 download_prometheus () {
-  sudo wget $PROMETHEUS_URL -O /tmp/prometheus.tar.gz
-  sudo tar -xzf /tmp/prometheus.tar.gz -C /tmp
-  sudo mv /tmp/prometheus-$PROMETHEUS_VERSION.linux-amd64/* /etc/prometheus
-  sudo mv /etc/prometheus/prometheus /usr/bin/
-  sudo rm -rf /tmp/prometheus* 
-  sudo chown -R prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG
-  sudo chown prometheus:prometheus /usr/bin/prometheus
-  sudo chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
+  wget $PROMETHEUS_URL -O /tmp/prometheus.tar.gz
+  tar -xzf /tmp/prometheus.tar.gz -C /tmp
+  mv /tmp/prometheus-$PROMETHEUS_VERSION.linux-amd64/* /etc/prometheus
+  mv /etc/prometheus/prometheus /usr/bin/
+  rm -rf /tmp/prometheus* 
+  chown -R prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG
+  chown prometheus:prometheus /usr/bin/prometheus
+  chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
 }
 
 # Функция создания конфиг файла Prometheus:
 create_prometheus_config() {
-  sudo tee $PROMETHEUS_FOLDER_CONFIG/prometheus.yml > /dev/null <<EOF
+  tee $PROMETHEUS_FOLDER_CONFIG/prometheus.yml > /dev/null <<EOF
 global:
   scrape_interval: 15s
 
@@ -87,7 +96,7 @@ EOF
 
 # Функция создания юнита Prometheus для systemd:
 create_unit_prometheus() {
-  sudo tee /etc/systemd/system/prometheus.service > /dev/null <<EOF
+  tee /etc/systemd/system/prometheus.service > /dev/null <<EOF
 [Unit]
 Description=Prometheus Server
 Wants=network-online.target
@@ -109,9 +118,9 @@ EOF
 
 # Запуск и включение Prometheus:
 start_enable_prometheus() {
-  sudo systemctl daemon-reload
-  sudo systemctl start prometheus
-  sudo systemctl enable prometheus
+  systemctl daemon-reload
+  systemctl start prometheus
+  systemctl enable prometheus
 }
 
 # Функция отключения SELinux:
@@ -119,7 +128,7 @@ disable_selinux() {
   # Проверка, существует ли файл конфигурации SELinux
   if [ -f /etc/selinux/config ]; then
     # Изменение строки SELINUX= на SELINUX=disabled
-    sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
+    sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
     magentaprint "SELinux был отключен. Перезагрузите систему для применения изменений."
   else
     magentaprint "Файл конфигурации SELinux не найден."
@@ -128,7 +137,7 @@ disable_selinux() {
 
 # Функция проверки состояния Prometheus:
 check_status_prometheus() {
-  sudo systemctl status prometheus --no-pager
+  systemctl status prometheus --no-pager
   prometheus --version
   magentaprint "Prometheus успешно установлен и настроен на $OS."
 }

@@ -18,7 +18,15 @@ CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
 
 magentaprint() { echo; printf "${MAGENTA}%s${RESET}\n" "$1"; }
 
+
 # ------------------------------------------------------------------------------------ #
+
+
+# Проверка запуска через sudo
+if [ -z "$SUDO_USER" ]; then
+    errorprint "Пожалуйста, запустите скрипт через sudo."
+    exit 1
+fi
 
 # Выбор ОС для установки необходимых пакетов и настройки firewall:
 check_os() {

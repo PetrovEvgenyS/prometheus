@@ -12,6 +12,16 @@ PROMETHEUS_FOLDER_TSDATA="/var/lib/prometheus"
 # Переменная определения и хранения дистрибутива:
 OS=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
 
+
+# ------------------------------------------------------------------------------------ #
+
+
+# Проверка запуска через sudo
+if [ -z "$SUDO_USER" ]; then
+    errorprint "Пожалуйста, запустите скрипт через sudo."
+    exit 1
+fi
+
 # Выбор ОС для установки необходимых пакетов.
 check_os() {
   if [ "$OS" == "ubuntu" ]; then
@@ -28,25 +38,25 @@ check_os() {
 # Функция установки необходимых пакетов и настройки firewall на Ubuntu:
 packages_firewall_ubuntu() {
   # Установить wget и tar.
-  sudo apt -y install wget tar
+  apt -y install wget tar
 }
 
 # Функция установки необходимых пакетов и настройки firewall на AlmaLinux:
 packages_firewall_almalinux() {
   # Установить wget и tar.
-  sudo dnf -y install wget tar
+  dnf -y install wget tar
   # Открыть порт 9090.
-  sudo firewall-cmd --permanent --add-port=9090/tcp
+  firewall-cmd --permanent --add-port=9090/tcp
   # Перезагрузить firewall-cmd для применения и сохранения настроек.
-  sudo firewall-cmd --reload
+  firewall-cmd --reload
 }
 
 # Функция подготовки почвы:
 preparation() {
   # Создание необходимых директорий:
-  sudo mkdir -p $PROMETHEUS_FOLDER_CONFIG $PROMETHEUS_FOLDER_TSDATA
+  mkdir -p $PROMETHEUS_FOLDER_CONFIG $PROMETHEUS_FOLDER_TSDATA
   # Создание пользователя prometheus:
-  sudo useradd --no-create-home --shell /bin/false prometheus
+  useradd --no-create-home --shell /bin/false prometheus
 }
 
 # Функция для скачивания Prometheus:
@@ -56,20 +66,20 @@ download_prometheus () {
   # Распаковка Prometheus в директорию /tmp:
   tar -xzf /tmp/prometheus.tar.gz -C /tmp
   # Перемещение всех файлов Prometheus:
-  sudo mv /tmp/prometheus-$PROMETHEUS_VERSION.linux-amd64/* /etc/prometheus
+  mv /tmp/prometheus-$PROMETHEUS_VERSION.linux-amd64/* /etc/prometheus
   # Перемещение исполняемого файла Prometheus:
-  sudo mv /etc/prometheus/prometheus /usr/bin/
+  mv /etc/prometheus/prometheus /usr/bin/
   # Удаление директорий prometheus:
-  sudo rm -rf /tmp/prometheus* 
+  rm -rf /tmp/prometheus* 
   # Настройка прав:
-  sudo chown -R prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG
-  sudo chown prometheus:prometheus /usr/bin/prometheus
-  sudo chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
+  chown -R prometheus:prometheus $PROMETHEUS_FOLDER_CONFIG
+  chown prometheus:prometheus /usr/bin/prometheus
+  chown prometheus:prometheus $PROMETHEUS_FOLDER_TSDATA
 }
 
 # Функция создания конфиг файла Prometheus:
 create_prometheus_config() {
-  sudo tee $PROMETHEUS_FOLDER_CONFIG/prometheus.yml > /dev/null <<EOF
+  tee $PROMETHEUS_FOLDER_CONFIG/prometheus.yml > /dev/null <<EOF
 # Определяет глобальные настройки для Prometheus. Эти настройки применяются ко всем заданиям (jobs), если не переопределены локально.
 global:
   # Устанавливает интервал опроса (scrape) для всех заданий по умолчанию. В данном случае, Prometheus будет опрашивать все цели каждые 15 секунд.
@@ -103,7 +113,7 @@ EOF
 
 # Функция создания юнита Prometheus для systemd:
 create_unit_prometheus() {
-  sudo tee /etc/systemd/system/prometheus.service > /dev/null <<EOF
+  tee /etc/systemd/system/prometheus.service > /dev/null <<EOF
 [Unit]
 # Описание юнита.
 Description=Prometheus Server
@@ -140,11 +150,11 @@ EOF
 # Запуск и включение Prometheus:
 start_enable_prometheus() {
   # Перезапуск всех сервисов.
-  sudo systemctl daemon-reload
+  systemctl daemon-reload
   # Запуск Prometheus.
-  sudo systemctl start prometheus
+  systemctl start prometheus
   # Добавление в автозапуск Prometheus.
-  sudo systemctl enable prometheus
+  systemctl enable prometheus
 }
 
 # Функция отключения SELinux:
@@ -152,7 +162,7 @@ disable_selinux() {
   # Проверка, существует ли файл конфигурации SELinux
   if [ -f /etc/selinux/config ]; then
     # Изменение строки SELINUX= на SELINUX=disabled
-    sudo sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
+    sed -i 's/^SELINUX=.*/SELINUX=disabled/' /etc/selinux/config  
     echo "SELinux был отключен. Перезагрузите систему для применения изменений."
   else
     echo "Файл конфигурации SELinux не найден."
@@ -162,7 +172,7 @@ disable_selinux() {
 # Функция проверки состояния Prometheus:
 check_status_prometheus() {
   # Проверить статус работы:
-  sudo systemctl status prometheus --no-pager
+  systemctl status prometheus --no-pager
   # Вывести версию:
   prometheus --version
   echo "Prometheus успешно установлен и настроен на $OS."
